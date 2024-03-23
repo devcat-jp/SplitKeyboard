@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "KeySwitchLib")(type "KiCad")(uri "C:/Users/devcat/Nextcloud/work/dev/KiCAD/footprints/KeySwitchLib/symbol/KeySwitchLib.kicad_sym")(options "")(descr ""))
+)
