@@ -1,30 +1,15 @@
 
-//#define LAYOUT_JAPANESE
-//#include <HID_Keyboard.h>
-
-
-
-// BLEを有効にするか否か
-//#define __ENABLE_BLE__
-
-// BLE有効か無効かで読み込むヘッダを切り替え
-#ifdef __ENABLE_BLE__
-  #include <KeyboardBLE.h>
-#else
-  #include <Keyboard.h>
-  //#include <Keyboard_jp_JP.h>
-#endif
+// USB関連
+#include <Keyboard.h>
+#include <Mouse.h>
 
 // LED
 #include <Adafruit_NeoPixel.h>
 #define LED_PIN 16
-// create a pixel strand with 1 pixel on PIN_NEOPIXEL
 Adafruit_NeoPixel pixels(1, LED_PIN);
 
 // I2C
 #include <Wire.h>
-
-
 
 // pin(row = out / col = in)
 #define KEY_ROW 5
@@ -61,14 +46,10 @@ bool key_state[sizeof(pin_row)/sizeof(pin_row[0])][15] = {0};
 bool key_flag[sizeof(pin_row)/sizeof(pin_row[0])][15] = {false};
 unsigned char key_input_count[sizeof(pin_row)/sizeof(pin_row[0])][15] = {0};
 
+
 //
 class KeyboardFunc{
 private:
-  
-  //bool key_state[sizeof(pin_row)/sizeof(pin_row[0])][sizeof(pin_col)/sizeof(pin_col[0])] = {0};
-  //bool key_flag[sizeof(pin_row)/sizeof(pin_row[0])][sizeof(pin_col)/sizeof(pin_col[0])] = {false};
-  //unsigned char key_input_count[sizeof(pin_row)/sizeof(pin_row[0])][sizeof(pin_col)/sizeof(pin_col[0])] = {0};
-
 public:
   // コンストラクタ 
   KeyboardFunc(){
@@ -147,25 +128,74 @@ public:
       }
     }
   }
-  
-
 };
 
 
-void setup() {
-  // BLE有効か無効かで初期化切り替え
-  #ifdef __ENABLE_BLE__
-    KeyboardBLE.begin();
-    //Serial.begin(9600);
-  #else
-    Serial.begin(9600);
-    Keyboard.begin();
-  #endif
 
+
+//------------------------------------------------------------------------------------------------
+// Core0 : I2C処理
+int val = 0, count = 0, len = 0, r = 0, c = 0, read_size = 7;
+
+void setup() {
+  Serial.begin(9600);
   // I2C設定
   Wire.setSDA(0);
   Wire.setSCL(1);
   Wire.begin();
+}
+
+void loop() {
+  len = Wire.requestFrom(0x30, read_size); //データ通信を要求
+  //Serial.println(len);
+
+  if (len == read_size) {
+    count = 0; r = 0; c = 0;
+
+    for(int i = 0; i < read_size; i++) {
+      val = Wire.read();
+      //Serial.printf("%x\n", val);
+
+      // 先頭バイトを確認
+      if(i == 0 && val != 0xAA) break;
+      if(i == 0) continue;
+
+      // 受信バイトを解析
+      for(int s = 0; s < 8; s++){
+        if((val & (byte)(1 << 7 - s)) > 0) {
+          //Serial.printf("r:%d, c:%d\n", r, c);
+          key_state[r][L_KEY_COL + c] = true;
+        } else {
+          key_state[r][L_KEY_COL + c] = false;
+        }
+
+        count++; c++;
+        // 片方の列数分実行したら、行を進めて列を戻す
+        if(count % R_KEY_COL == 0) {
+          r++;
+          c = 0;
+        }
+        // 終了判定
+        if(count >= (R_KEY_COL * KEY_ROW)) break;
+      }
+    }
+    //Serial.println("-------------------");
+  }
+
+  // ゴミ処理
+  while (Wire.available() > 0){
+    Wire.read();
+  } 
+
+  delay(10);
+}
+
+
+
+//------------------------------------------------------------------------------------------------
+// Core1 : キーボード入力処理
+void setup1() {
+  Keyboard.begin();
 
   // LED消灯
   pixels.clear();
@@ -185,71 +215,12 @@ void setup() {
   }
 }
 
-
-uint16_t raw;
-float v;
-int persent = 0, val = 0, count = 0, len = 0, r = 0, c = 0;
-int read_size = 6;
 KeyboardFunc func;
-
-void loop() {
+void loop1() {
   func.update();
-  
-  // もう片方のキーボード入力状況を取得する
-  len = Wire.requestFrom(0x30, read_size); //データ通信を要求
-  if (len == read_size) {
-    count = 0; r = 0; c = 0;
-    for(int i = 0; i < read_size; i++) {
-      val = Wire.read();
-      //Serial.printf("%x\n", val);
-      // 受信バイトを解析
-      for(int s = 0; s < 8; s++){
-        if((val & (byte)(1 << 7 - s)) > 0) {
-          Serial.printf("r:%d, c:%d\n", r, c);
-          key_state[r][L_KEY_COL + c] = true;
-        } else {
-          key_state[r][L_KEY_COL + c] = false;
-        }
-
-        count++; c++;
-        // 片方の列数分実行したら、行を進めて列を戻す
-        if(count % R_KEY_COL == 0) {
-          r++;
-          c = 0;
-        }
-        // 終了判定
-        if(count >= (R_KEY_COL * KEY_ROW)) break;
-      }
-    }
-    //Serial.println("-------------------");
-  } else {
-    while (Wire.available() > 0){
-      Wire.read();
-    }    
-  }
-
-  //Serial.println(len);
-  /*
-  if (len == read_size) {
-    for(int r = 0; r < row_len; r++){
-      for(int c = 0; c < 9; c++){
-        val = Wire.read();
-        //Serial.println(val);
-        if(val == 1) {
-          key_state[r][col_l_len + c] = true;
-          Serial.println(c);
-        } else {
-          key_state[r][col_l_len + c] = false;
-        }
-      }
-    }
-  } else {
-    while (Wire.available() > 0){
-      Wire.read();
-    }
-  }
-  */
-
   func.write();
-
 }
+
+
+
+

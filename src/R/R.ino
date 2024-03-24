@@ -28,34 +28,17 @@ unsigned char key_input_count[sizeof(pin_row)/sizeof(pin_row[0])][sizeof(pin_col
 
 
 //------------------------------------------------------------------------------------------------
-// I2C
+// I2C通信処理
 void receiveEvent(int num) {
 }
 
-/*
 void requestEvent() {
-  int count = 0;
-  for(int r = 0; r < row_len; r++){
-    for(int c = 0; c < col_len; c++){
-      if(key_state[r][c] == true)
-      {
-        send_key_state[count] = 1;
-        //key_state[r][c] = false;
-        //key_input_count[r][c] = 0;
-      } else {
-        send_key_state[count] = 0;
-        //key_state[r][c] = false;
-      }
-      count++;
-    }
-  }
-  Wire.write(send_key_state, 45);
-}
-*/
+  // LED点灯
+  //pixels.setPixelColor(0, pixels.Color(125, 0, 0, 1));
+  //pixels.show();
 
-void requestEvent() {
-  byte send_key_serial[6] = {0};
-  int count = 0; int num = 0;
+  byte send_key_serial[7] = {0xAA, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  int count = 0; int num = 1;
   for(int r = 0; r < KEY_ROW; r++){
     for(int c = 0; c < KEY_COL; c++){
       if(key_state[r][c] == true)
@@ -71,7 +54,11 @@ void requestEvent() {
       }
     }
   }
-  Wire.write(send_key_serial, 6);
+  Wire.write(send_key_serial, 7);
+
+  // LED消灯
+  //pixels.clear();
+  //pixels.show();
 
   //for(int i = 0; i < 6; i++) {
   //  Serial.printf("%x\n", send_key_serial[i]);
@@ -124,20 +111,13 @@ public:
       delay(1);
     }
   }
-
 };
 
 
+
 //------------------------------------------------------------------------------------------------
+// Core0 : キーボード処理
 void setup() {
-
-  // I2C設定
-  Wire.setSDA(0);
-  Wire.setSCL(1);
-  Wire.begin(0x30);
-  Wire.onReceive(receiveEvent);
-  Wire.onRequest(requestEvent);
-
   // 出力(row)
   for(int i = 0; i < row_len; i++){
     pinMode(pin_row[i], OUTPUT);
@@ -152,17 +132,32 @@ void setup() {
   Serial.begin(9600);
 }
 
-
-//------------------------------------------------------------------------------------------------
 KeyboardFunc func;
 void loop() {
   func.update();
-  //func.write();
-
-  //digitalWrite(16, HIGH);
-  //delay(250);
-  //digitalWrite(16, LOW);
-  //delay(250);
-  
-  //delay(1);
 }
+
+
+
+//------------------------------------------------------------------------------------------------
+// Core1：I2C通信
+void setup1() {
+  // I2C設定
+  Wire.setSDA(0);
+  Wire.setSCL(1);
+  Wire.begin(0x30);
+  Wire.onReceive(receiveEvent);
+  Wire.onRequest(requestEvent);
+}
+
+void loop1() {
+  delay(1);
+}
+
+
+
+
+
+
+
+
