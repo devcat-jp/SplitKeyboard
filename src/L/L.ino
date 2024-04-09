@@ -32,14 +32,14 @@ unsigned char key_map[2][sizeof(pin_row)/sizeof(pin_row[0])][15] = {
     {0x2B, 0x14, 0x1A, 0x08, 0x15, 0x17,  0x1C, 0x18, 0x0C, 0x12, 0x13, 0x2F, 0x30, 0x28, 0x00},
     {0xE0, 0x04, 0x16, 0x07, 0x09, 0x0A,  0x0B, 0x0D, 0x0E, 0x0F, 0x33, 0x34, 0x32, 0x00, 0x00},
     {0xE1, 0x1D, 0x1B, 0x06, 0x19, 0x05,  0x11, 0x10, 0x36, 0x37, 0x38, 0x87, 0x52, 0xE5, 0x00},
-    {0xFB, 0xFB, 0xE3, 0xE2, 0x2C, 0x00,  0xFB, 0x3B, 0x3C, 0x3D, 0x3E, 0x50, 0x51, 0x4F, 0x00}
+    {0xE0, 0xFB, 0xE3, 0xE2, 0x2C, 0x00,  0xFB, 0x3B, 0x3C, 0x3D, 0x3E, 0x50, 0x51, 0x4F, 0x00}
   },
   {
     {0x29, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E,  0x3F, 0x40, 0x41, 0x42, 0x00, 0x00, 0x00, 0x00, 0x4C},
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    {0xFB, 0xFB, 0x00, 0x00, 0x00, 0x00,  0xFB, 0x3B, 0x3C, 0x3D, 0x3E, 0x00, 0x00, 0x00, 0x00}
+    {0xE0, 0xFB, 0x00, 0x00, 0x28, 0x00,  0xFB, 0x3B, 0x3C, 0x3D, 0x3E, 0x00, 0x00, 0x00, 0x00}
   }
 };
 int chattering = 3;
@@ -114,51 +114,11 @@ public:
             //pixels.setPixelColor(0, pixels.Color(125, 0, 0, 1));
             //pixels.show();
           }
-          // 左マウスクリック
-          else if(key_map[key_map_layer][r][c] == 0xFC) {
-            Mouse.press(MOUSE_LEFT);
-          }
-          // 右マウスクリック
-          else if(key_map[key_map_layer][r][c] == 0xFD) {
-            Mouse.press(MOUSE_RIGHT);
-          }
-          /*
-          // マウス操作
-          else if(key_map[key_map_layer][r][c] == 0xF0 || key_map[key_map_layer][r][c] == 0xF1 || key_map[key_map_layer][r][c] == 0xF2 || key_map[key_map_layer][r][c] == 0xF3)
-          {
-            // マウス操作時はボタンクリック処理を入れない
-          }
-          */
           // キーボード入力
           else if(key_map[key_map_layer][r][c] != 0xFB){
             Serial.printf("p: %x\n", key_map[key_map_layer][r][c]);
             Keyboard.pressRaw(key_map[key_map_layer][r][c]);
           }
-
-        /*
-        // ボタンを押しっぱなしであると判断
-        } else if(key_state[r][c] == true && key_flag[r][c] == true){
-          // 上マウス移動
-          if(key_map[key_map_layer][r][c] == 0xF0) {
-              Mouse.move(0, -1 * mouse_move[0], 0);
-              if(mouse_move[0] < MOUSE_SPEED_MAX) mouse_move[0]++;
-          }
-          // 下マウス移動
-          else if(key_map[key_map_layer][r][c] == 0xF1) {
-              Mouse.move(0, 1 * mouse_move[1], 0);
-              if(mouse_move[1] < MOUSE_SPEED_MAX) mouse_move[1]++;
-          }
-          // 左マウス移動
-          else if(key_map[key_map_layer][r][c] == 0xF2) {
-              Mouse.move(-1 * mouse_move[2], 0, 0);
-              if(mouse_move[2] < MOUSE_SPEED_MAX) mouse_move[2]++;
-          }
-          // 右マウス移動
-          else if(key_map[key_map_layer][r][c] == 0xF3) {
-              Mouse.move(1 * mouse_move[3], 0, 0);
-              if(mouse_move[3] < MOUSE_SPEED_MAX) mouse_move[3]++;
-          }
-        */
           
         // ボタンを離したと判断
         } else if(key_state[r][c] == false) {
@@ -175,24 +135,6 @@ public:
             else if(key_map[key_map_layer][r][c] == 0xFD) {
               Mouse.release(MOUSE_RIGHT);
             }
-            /*
-            // 上マウス移動
-            else if(key_map[key_map_layer][r][c] == 0xF0) {
-              mouse_move[0] = MOUSE_SPEED_MIN;
-            }
-            // 下マウス移動
-            else if(key_map[key_map_layer][r][c] == 0xF1) {
-              mouse_move[1] = MOUSE_SPEED_MIN;
-            }
-            // 左マウス移動
-            else if(key_map[key_map_layer][r][c] == 0xF2) {
-              mouse_move[2] = MOUSE_SPEED_MIN;
-            }
-            // 右マウス移動
-            else if(key_map[key_map_layer][r][c] == 0xF3) {
-              mouse_move[3] = MOUSE_SPEED_MIN;
-            }
-            */
 
             // キーボード入力
             else if(key_map[key_map_layer][r][c] != 0xFB){
@@ -276,7 +218,7 @@ void loop() {
     Wire.read();
   } 
 
-  delay(20);
+  delay(10);
 }
 
 
