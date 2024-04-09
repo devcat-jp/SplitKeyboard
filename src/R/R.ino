@@ -96,13 +96,13 @@ public:
         if(key_input_count[r][c] >= chattering){
           key_state[r][c] = true;
           // LED点灯
-          pixels.setPixelColor(0, pixels.Color(125, 0, 0, 1));
-          pixels.show();
+          //pixels.setPixelColor(0, pixels.Color(125, 0, 0, 1));
+          //pixels.show();
         } else {
           key_state[r][c] = false;
           // LED消灯
-          pixels.clear();
-          pixels.show();
+          //pixels.clear();
+          //pixels.show();
         }
       }
 
@@ -129,7 +129,7 @@ void setup() {
   }
 
   // シリアル通信
-  Serial.begin(9600);
+  //Serial.begin(9600);
 }
 
 KeyboardFunc func;
@@ -143,6 +143,7 @@ void loop() {
 // Core1：I2C通信
 void setup1() {
   // I2C設定
+  Wire.setClock(400000);
   Wire.setSDA(0);
   Wire.setSCL(1);
   Wire.begin(0x30);
