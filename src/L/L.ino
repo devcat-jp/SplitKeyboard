@@ -15,6 +15,7 @@ Adafruit_NeoPixel pixels(1, LED_PIN);
 #define KEY_ROW 5
 #define L_KEY_COL 6
 #define R_KEY_COL 9
+#define KEY_STOP_NUM 10
 int pin_row[] = {28, 27, 26, 15, 14};
 int row_len = sizeof(pin_row)/sizeof(pin_row[0]);
 int pin_col[] = {3, 4, 5, 6, 7, 8};
@@ -45,7 +46,8 @@ unsigned char key_map[2][sizeof(pin_row)/sizeof(pin_row[0])][15] = {
 int chattering = 3;
 bool key_state[sizeof(pin_row)/sizeof(pin_row[0])][15] = {0};
 bool key_flag[sizeof(pin_row)/sizeof(pin_row[0])][15] = {false};
-unsigned char key_input_count[sizeof(pin_row)/sizeof(pin_row[0])][15] = {0};
+int key_input_count[sizeof(pin_row)/sizeof(pin_row[0])][15] = {0};
+int key_stop[sizeof(pin_row)/sizeof(pin_row[0])][15] = {0};
 
 // マウス移動量
 #define MOUSE_SPEED_MAX 8
@@ -97,62 +99,59 @@ public:
     for(int r = 0; r < row_len; r++){
       for(int c = 0; c < 15; c++){
 
+        /////////////////////////////////////////////////////////////////  
         // ボタンを押したと判断
         if(key_state[r][c] == true && key_flag[r][c] == false){
           delay(1);
           key_flag[r][c] = true;            // ボタンを押した
 
-          // 特殊キー以外の場合は初期化
-          if(key_map[key_map_layer][r][c] != 0xFB){
-            key_input_count[r][c] = -1;      // キー押下の初期化（連続防止）  
-          }
-
           // レイヤー切り替え
           if(key_map[key_map_layer][r][c] == 0xFB){
             key_map_layer = 1;
-            // LED点灯
-            //pixels.setPixelColor(0, pixels.Color(125, 0, 0, 1));
-            //pixels.show();
+          }
+          // 押しっぱなしのキー
+          else if(key_map[key_map_layer][r][c] == 0xE0 || key_map[key_map_layer][r][c] == 0xE1 || key_map[key_map_layer][r][c] == 0xE2){
+            Keyboard.pressRaw(key_map[key_map_layer][r][c]);
           }
           // キーボード入力
           else if(key_map[key_map_layer][r][c] != 0xFB){
-            Serial.printf("p: %x\n", key_map[key_map_layer][r][c]);
-            Keyboard.pressRaw(key_map[key_map_layer][r][c]);
+            Keyboard.writeRaw(key_map[key_map_layer][r][c]);
           }
-          
+
+        /////////////////////////////////////////////////////////////////
+        // ボタン押しっぱなしと判断
+        } else if(key_state[r][c] == true && key_flag[r][c] == true){
+          // 特殊キー以外はキーを放していない場合に連打させる
+          if(key_map[key_map_layer][r][c] != 0xFB && key_map[key_map_layer][r][c] != 0xE0 && key_map[key_map_layer][r][c] != 0xE1 && key_map[key_map_layer][r][c] != 0xE2){
+            // 連打する前に少し待つ
+            key_stop[r][c]++;
+            if(key_stop[r][c] > KEY_STOP_NUM){
+              Keyboard.writeRaw(key_map[key_map_layer][r][c]);
+            }
+            
+          }
+
+        /////////////////////////////////////////////////////////////////
         // ボタンを離したと判断
         } else if(key_state[r][c] == false) {
           // リリース
           if(key_flag[r][c] == true){
             delay(1);
+            // 初期化
             key_flag[r][c] = false;
-
-            // 左マウスクリック
-            if(key_map[key_map_layer][r][c] == 0xFC) {
-              Mouse.release(MOUSE_LEFT);
-            }
-            // 右マウスクリック
-            else if(key_map[key_map_layer][r][c] == 0xFD) {
-              Mouse.release(MOUSE_RIGHT);
-            }
-
-            // キーボード入力
-            else if(key_map[key_map_layer][r][c] != 0xFB){
-              Serial.printf("r: %x\n", key_map[key_map_layer][r][c]);
-              Keyboard.releaseRaw(key_map[key_map_layer][r][c]);
-            }
+            key_stop[r][c] = 0;
 
             // レイヤー切り替え
-            else if(key_map[key_map_layer][r][c] == 0xFB){
+            if(key_map[key_map_layer][r][c] == 0xFB){
               key_map_layer = 0;
-              // LED消灯
-              //pixels.clear();
-              //pixels.show();
-            }          
+            }
+            // キーボード解放
+            else if(key_map[key_map_layer][r][c] == 0xE0 || key_map[key_map_layer][r][c] == 0xE1 || key_map[key_map_layer][r][c] == 0xE2){
+              //Serial.printf("r: %x\n", key_map[key_map_layer][r][c]);
+              Keyboard.releaseRaw(key_map[key_map_layer][r][c]);
+            }                  
           }
         }
-
-
 
 
       }
