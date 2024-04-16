@@ -15,7 +15,7 @@ Adafruit_NeoPixel pixels(1, LED_PIN);
 #define KEY_ROW 5
 #define L_KEY_COL 6
 #define R_KEY_COL 9
-#define KEY_STOP_NUM 10
+#define KEY_STOP_NUM 20
 int pin_row[] = {28, 27, 26, 15, 14};
 int row_len = sizeof(pin_row)/sizeof(pin_row[0]);
 int pin_col[] = {3, 4, 5, 6, 7, 8};
@@ -110,7 +110,8 @@ public:
             key_map_layer = 1;
           }
           // 押しっぱなしのキー
-          else if(key_map[key_map_layer][r][c] == 0xE0 || key_map[key_map_layer][r][c] == 0xE1 || key_map[key_map_layer][r][c] == 0xE2){
+          else if(key_map[key_map_layer][r][c] == 0xE0 || key_map[key_map_layer][r][c] == 0xE1 
+            || key_map[key_map_layer][r][c] == 0xE2 || key_map[key_map_layer][r][c] == 0xE3){
             Keyboard.pressRaw(key_map[key_map_layer][r][c]);
           }
           // キーボード入力
@@ -122,7 +123,8 @@ public:
         // ボタン押しっぱなしと判断
         } else if(key_state[r][c] == true && key_flag[r][c] == true){
           // 特殊キー以外はキーを放していない場合に連打させる
-          if(key_map[key_map_layer][r][c] != 0xFB && key_map[key_map_layer][r][c] != 0xE0 && key_map[key_map_layer][r][c] != 0xE1 && key_map[key_map_layer][r][c] != 0xE2){
+          if(key_map[key_map_layer][r][c] != 0xFB && key_map[key_map_layer][r][c] != 0xE0 && 
+            key_map[key_map_layer][r][c] != 0xE1 && key_map[key_map_layer][r][c] != 0xE2 && key_map[key_map_layer][r][c] != 0xE3){
             // 連打する前に少し待つ
             key_stop[r][c]++;
             if(key_stop[r][c] > KEY_STOP_NUM){
@@ -146,7 +148,8 @@ public:
               key_map_layer = 0;
             }
             // キーボード解放
-            else if(key_map[key_map_layer][r][c] == 0xE0 || key_map[key_map_layer][r][c] == 0xE1 || key_map[key_map_layer][r][c] == 0xE2){
+            else if(key_map[key_map_layer][r][c] == 0xE0 || key_map[key_map_layer][r][c] == 0xE1 
+              || key_map[key_map_layer][r][c] == 0xE2 || key_map[key_map_layer][r][c] == 0xE3){
               //Serial.printf("r: %x\n", key_map[key_map_layer][r][c]);
               Keyboard.releaseRaw(key_map[key_map_layer][r][c]);
             }                  
